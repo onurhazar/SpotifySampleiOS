@@ -6,12 +6,10 @@ using System.Diagnostics;
 
 namespace SpotifySampleiOS
 {
-    public partial class ViewController : UIViewController, ISPTAppRemoteDelegate, ISPTAppRemotePlayerStateDelegate
+    public partial class ViewController : UIViewController, ISPTSessionManagerDelegate, ISPTAppRemoteDelegate, ISPTAppRemotePlayerStateDelegate
     {
         string spotifyClientId = "74a6c04e47494a06b9144b4d80df47a0";
         NSUrl spotifyRedirectURI = new NSUrl("spotify-start://spotify-login-callback");
-
-        CustomSessionManagerDelegate _delegate;
 
         SPTConfiguration _configuration;
 
@@ -40,12 +38,10 @@ namespace SpotifySampleiOS
             {
                 if (_sessionManager == null)
                 {
-                    _delegate = new CustomSessionManagerDelegate();
-                    _sessionManager = new SPTSessionManager(Configuration, _delegate);
-
-                    _sessionManager.WeakDelegate = _delegate;
-                    _sessionManager.Delegate = _delegate;
+                    _sessionManager = new SPTSessionManager(Configuration, this);
                 }
+
+                Session.SessionManager = _sessionManager;
                 return _sessionManager;
             }
         }
@@ -60,6 +56,7 @@ namespace SpotifySampleiOS
                 {
                     _appRemote = new SPTAppRemote(Configuration, SPTAppRemoteLogLevel.Debug);
                 }
+                Session.AppRemote = _appRemote;
                 return _appRemote;
             }
         }
@@ -68,13 +65,12 @@ namespace SpotifySampleiOS
 
         protected ViewController(IntPtr handle) : base(handle)
         {
-            // Note: this .ctor should not contain any initialization logic.
         }
 
         public override void ViewDidLoad()
         {
             base.ViewDidLoad();
-            // Perform any additional setup after loading the view, typically from a nib.
+
             connectButton.TouchUpInside += HandleConnectButton;
             disconnectButton.TouchUpInside += HandleDisconnectButton;
             playButton.TouchUpInside += HandlePlayButton;
@@ -98,14 +94,12 @@ namespace SpotifySampleiOS
 
         private void HandleConnectButton(object sender, EventArgs e)
         {
-            /*
-                Scopes let you specify exactly what types of data your application wants to
-                access, and the set of scopes you pass in your call determines what access
-                permissions the user is asked to grant.
-                For more information, see https://developer.spotify.com/web-api/using-scopes/.
-            */
 
-            var scope = SPTScope.AppRemoteControlScope | SPTScope.PlaylistReadPrivateScope;
+            //Scopes let you specify exactly what types of data your application wants to
+            //access, and the set of scopes you pass in your call determines what access
+            //permissions the user is asked to grant.
+            //For more information, see https://developer.spotify.com/web-api/using-scopes/.
+            var scope = SPTScope.AppRemoteControlScope | SPTScope.PlaylistReadPrivateScope; //| SPTScope.StreamingScope | SPTScope.UserReadCurrentlyPlayingScope | SPTScope.UserFollowReadScope;
 
             SessionManager.InitiateSessionWithScope(scope, SPTAuthorizationOptions.ClientAuthorizationOption);
         }
@@ -204,24 +198,24 @@ namespace SpotifySampleiOS
         //ISPTSessionManagerDelegate Methods
 
         //[Export("sessionManager:didInitiateSession:")]
-        //public void DidInitiateSession(SPTSessionManager manager, SPTSession session)
-        //{
-        //    Debug.WriteLine("Authorization Success. " + session.Description);
-        //    AppRemote.ConnectionParameters.AccessToken = session.AccessToken;
-        //    AppRemote.Connect();
-        //}
+        public void DidInitiateSession(SPTSessionManager manager, SPTSession session)
+        {
+            Debug.WriteLine("Authorization Success. " + session.Description);
+            AppRemote.ConnectionParameters.AccessToken = session.AccessToken;
+            AppRemote.Connect();
+        }
 
         //[Export("sessionManager:didFailWithError:")]
-        //public void DidFailWithError(SPTSessionManager manager, NSError error)
-        //{
-        //    Debug.WriteLine("Authorization Failed. Error:" + error.LocalizedDescription);
-        //}
+        public void DidFailWithError(SPTSessionManager manager, NSError error)
+        {
+            Debug.WriteLine("Authorization Failed. Error:" + error.LocalizedDescription);
+        }
 
-        //[Export("sessionManager:didRenewSession:")]
-        //public void DidRenewSession(SPTSessionManager manager, SPTSession session)
-        //{
-        //    Debug.WriteLine("Session Renewed. " + session.Description);
-        //}
+        [Export("sessionManager:didRenewSession:")]
+        public void DidRenewSession(SPTSessionManager manager, SPTSession session)
+        {
+            Debug.WriteLine("Session Renewed. " + session.Description);
+        }
 
         //ISPTAppRemoteDelegate Methods
 
