@@ -55,6 +55,7 @@ namespace SpotifySampleiOS
                 if (_appRemote == null)
                 {
                     _appRemote = new SPTAppRemote(Configuration, SPTAppRemoteLogLevel.Debug);
+                    _appRemote.Delegate = this;
                 }
                 Session.AppRemote = _appRemote;
                 return _appRemote;
@@ -171,7 +172,6 @@ namespace SpotifySampleiOS
                     albumImageView.Image = img;
                 }
             }
-
         }
 
         private void FetchPlayerState()
@@ -195,7 +195,7 @@ namespace SpotifySampleiOS
             }
         }
 
-        //ISPTSessionManagerDelegate Methods
+        #region ISPTSessionManagerDelegate Methods
 
         //[Export("sessionManager:didInitiateSession:")]
         public void DidInitiateSession(SPTSessionManager manager, SPTSession session)
@@ -211,14 +211,17 @@ namespace SpotifySampleiOS
             Debug.WriteLine("Authorization Failed. Error:" + error.LocalizedDescription);
         }
 
-        [Export("sessionManager:didRenewSession:")]
+        [Export("sessionManager:didRenewSession:")] //needed for optional delegate method
         public void DidRenewSession(SPTSessionManager manager, SPTSession session)
         {
             Debug.WriteLine("Session Renewed. " + session.Description);
         }
 
-        //ISPTAppRemoteDelegate Methods
+        #endregion
 
+        #region ISPTAppRemoteDelegate Methods
+
+        [Export("appRemoteDidEstablishConnection:")]
         public void DidEstablishConnection(SPTAppRemote appRemote)
         {
             Debug.WriteLine("Connected");
@@ -250,7 +253,9 @@ namespace SpotifySampleiOS
             lastPlayerState = null;
         }
 
-        //ISPTAppRemotePlayerAPIDelegate Methods
+        #endregion
+
+        #region ISPTAppRemotePlayerAPIDelegate Methods
 
         public void PlayerStateDidChange(SPTAppRemotePlayerState playerState)
         {
@@ -259,5 +264,7 @@ namespace SpotifySampleiOS
 
             UpdatePlayerState(playerState);
         }
+
+        #endregion
     }
 }
