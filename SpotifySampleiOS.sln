@@ -1,0 +1,23 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpotifySampleiOS", "SpotifySampleiOS\SpotifySampleiOS.csproj", "{962D1D9F-6AA0-45F6-B847-28DD2D67391C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|iPhoneSimulator = Debug|iPhoneSimulator
+		Release|iPhone = Release|iPhone
+		Release|iPhoneSimulator = Release|iPhoneSimulator
+		Debug|iPhone = Debug|iPhone
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{962D1D9F-6AA0-45F6-B847-28DD2D67391C}.Debug|iPhoneSimulator.ActiveCfg = Debug|iPhoneSimulator
+		{962D1D9F-6AA0-45F6-B847-28DD2D67391C}.Debug|iPhoneSimulator.Build.0 = Debug|iPhoneSimulator
+		{962D1D9F-6AA0-45F6-B847-28DD2D67391C}.Release|iPhone.ActiveCfg = Release|iPhone
+		{962D1D9F-6AA0-45F6-B847-28DD2D67391C}.Release|iPhone.Build.0 = Release|iPhone
+		{962D1D9F-6AA0-45F6-B847-28DD2D67391C}.Release|iPhoneSimulator.ActiveCfg = Release|iPhoneSimulator
+		{962D1D9F-6AA0-45F6-B847-28DD2D67391C}.Release|iPhoneSimulator.Build.0 = Release|iPhoneSimulator
+		{962D1D9F-6AA0-45F6-B847-28DD2D67391C}.Debug|iPhone.ActiveCfg = Debug|iPhone
+		{962D1D9F-6AA0-45F6-B847-28DD2D67391C}.Debug|iPhone.Build.0 = Debug|iPhone
+	EndGlobalSection
+EndGlobal

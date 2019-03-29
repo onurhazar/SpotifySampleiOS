@@ -1,0 +1,269 @@
+﻿using System;
+using UIKit;
+using SpotifyBindingiOS;
+using Foundation;
+using System.Diagnostics;
+
+namespace SpotifySampleiOS
+{
+    public partial class ViewController : UIViewController, ISPTAppRemoteDelegate, ISPTAppRemotePlayerStateDelegate
+    {
+        string spotifyClientId = "74a6c04e47494a06b9144b4d80df47a0";
+        NSUrl spotifyRedirectURI = new NSUrl("spotify-start://spotify-login-callback");
+
+        CustomSessionManagerDelegate _delegate;
+
+        SPTConfiguration _configuration;
+
+        public SPTConfiguration Configuration
+        {
+            get
+            {
+                if (_configuration == null)
+                {
+                    _configuration = new SPTConfiguration(spotifyClientId, spotifyRedirectURI)
+                    {
+                        PlayURI = "",
+                        TokenSwapURL = new NSUrl("https://sweltering-risk.glitch.me/api/token"),//new NSUrl("http://192.168.21.177:17022/swap"),
+                        TokenRefreshURL = new NSUrl("https://sweltering-risk.glitch.me/api/refresh_token")//new NSUrl("http://192.168.21.177:17022/refresh")
+                    };
+                }
+                return _configuration;
+            }
+        }
+
+        SPTSessionManager _sessionManager;
+
+        public SPTSessionManager SessionManager
+        {
+            get
+            {
+                if (_sessionManager == null)
+                {
+                    _delegate = new CustomSessionManagerDelegate();
+                    _sessionManager = new SPTSessionManager(Configuration, _delegate);
+
+                    _sessionManager.WeakDelegate = _delegate;
+                    _sessionManager.Delegate = _delegate;
+                }
+                return _sessionManager;
+            }
+        }
+
+        SPTAppRemote _appRemote;
+
+        public SPTAppRemote AppRemote
+        {
+            get
+            {
+                if (_appRemote == null)
+                {
+                    _appRemote = new SPTAppRemote(Configuration, SPTAppRemoteLogLevel.Debug);
+                }
+                return _appRemote;
+            }
+        }
+
+        SPTAppRemotePlayerState lastPlayerState;
+
+        protected ViewController(IntPtr handle) : base(handle)
+        {
+            // Note: this .ctor should not contain any initialization logic.
+        }
+
+        public override void ViewDidLoad()
+        {
+            base.ViewDidLoad();
+            // Perform any additional setup after loading the view, typically from a nib.
+            connectButton.TouchUpInside += HandleConnectButton;
+            disconnectButton.TouchUpInside += HandleDisconnectButton;
+            playButton.TouchUpInside += HandlePlayButton;
+
+            UpdateViewBasedOnConnected();
+        }
+
+        //Actions
+
+        private void HandlePlayButton(object sender, EventArgs e)
+        {
+            if (lastPlayerState != null && lastPlayerState.Paused)
+            {
+                AppRemote.PlayerAPI.Resume(null);
+            }
+            else
+            {
+                AppRemote.PlayerAPI.Pause(null);
+            }
+        }
+
+        private void HandleConnectButton(object sender, EventArgs e)
+        {
+            /*
+                Scopes let you specify exactly what types of data your application wants to
+                access, and the set of scopes you pass in your call determines what access
+                permissions the user is asked to grant.
+                For more information, see https://developer.spotify.com/web-api/using-scopes/.
+            */
+
+            var scope = SPTScope.AppRemoteControlScope | SPTScope.PlaylistReadPrivateScope;
+
+            SessionManager.InitiateSessionWithScope(scope, SPTAuthorizationOptions.ClientAuthorizationOption);
+        }
+
+        private void HandleDisconnectButton(object sender, EventArgs e)
+        {
+            if (AppRemote.Connected)
+            {
+                AppRemote.Disconnect();
+            }
+        }
+
+        private void UpdateViewBasedOnConnected()
+        {
+            if (AppRemote.Connected)
+            {
+                connectButton.Hidden = true;
+                disconnectButton.Hidden = false;
+                albumImageView.Hidden = false;
+                songTitleLabel.Hidden = false;
+                playButton.Hidden = false;
+            }
+            else
+            {
+                connectButton.Hidden = false;
+                disconnectButton.Hidden = true;
+                albumImageView.Hidden = true;
+                songTitleLabel.Hidden = true;
+                playButton.Hidden = true;
+            }
+        }
+
+        private void UpdatePlayerState(SPTAppRemotePlayerState playerState)
+        {
+            if (lastPlayerState.Track.URI != playerState.Track.URI)
+            {
+                FetchArtwork(playerState.Track);
+            }
+
+            lastPlayerState = playerState;
+            songTitleLabel.Text = playerState.Track.Name;
+
+            if (playerState.Paused)
+            {
+                playButton.SetTitle("Play", UIControlState.Normal);
+            }
+            else
+            {
+                playButton.SetTitle("Pause", UIControlState.Normal);
+            }
+        }
+
+        private void FetchArtwork(SPTAppRemoteTrack track)
+        {
+            AppRemote.ImageAPI.FetchImageForItem(track, CoreGraphics.CGSize.Empty, HandleFetchArtworkCallback);
+        }
+
+        void HandleFetchArtworkCallback(NSObject image, NSError error)
+        {
+            if (error != null)
+            {
+                Debug.WriteLine("Error fetching track image: " + error.LocalizedDescription);
+            }
+            else if (image != null)
+            {
+                var img = image as UIImage;
+                if (img != null)
+                {
+                    albumImageView.Image = img;
+                }
+            }
+
+        }
+
+        private void FetchPlayerState()
+        {
+            AppRemote.PlayerAPI.GetPlayerState(HandleGetPlayerStateCallback);
+        }
+
+        void HandleGetPlayerStateCallback(NSObject playerState, NSError error)
+        {
+            if (error != null)
+            {
+                Debug.WriteLine("Error getting player state: " + error.LocalizedDescription);
+            }
+            else if (playerState != null)
+            {
+                var state = playerState as SPTAppRemotePlayerState;
+                if (state != null)
+                {
+                    UpdatePlayerState(state);
+                }
+            }
+        }
+
+        //ISPTSessionManagerDelegate Methods
+
+        //[Export("sessionManager:didInitiateSession:")]
+        //public void DidInitiateSession(SPTSessionManager manager, SPTSession session)
+        //{
+        //    Debug.WriteLine("Authorization Success. " + session.Description);
+        //    AppRemote.ConnectionParameters.AccessToken = session.AccessToken;
+        //    AppRemote.Connect();
+        //}
+
+        //[Export("sessionManager:didFailWithError:")]
+        //public void DidFailWithError(SPTSessionManager manager, NSError error)
+        //{
+        //    Debug.WriteLine("Authorization Failed. Error:" + error.LocalizedDescription);
+        //}
+
+        //[Export("sessionManager:didRenewSession:")]
+        //public void DidRenewSession(SPTSessionManager manager, SPTSession session)
+        //{
+        //    Debug.WriteLine("Session Renewed. " + session.Description);
+        //}
+
+        //ISPTAppRemoteDelegate Methods
+
+        public void DidEstablishConnection(SPTAppRemote appRemote)
+        {
+            Debug.WriteLine("Connected");
+            UpdateViewBasedOnConnected();
+            AppRemote.PlayerAPI.Delegate = this;
+            AppRemote.PlayerAPI.SubscribeToPlayerState(HandleSubscribeToPlayerStateCallback);
+            FetchPlayerState();
+        }
+
+        void HandleSubscribeToPlayerStateCallback(NSObject success, NSError error)
+        {
+            if (error != null)
+            {
+                Debug.WriteLine("Error subscribing to player state: " + error.LocalizedDescription);
+            }
+        }
+
+        public void DidFailConnectionAttemptWithError(SPTAppRemote appRemote, NSError error)
+        {
+            Debug.WriteLine("Failed");
+            UpdateViewBasedOnConnected();
+            lastPlayerState = null;
+        }
+
+        public void DidDisconnectWithError(SPTAppRemote appRemote, NSError error)
+        {
+            Debug.WriteLine("Disconnected");
+            UpdateViewBasedOnConnected();
+            lastPlayerState = null;
+        }
+
+        //ISPTAppRemotePlayerAPIDelegate Methods
+
+        public void PlayerStateDidChange(SPTAppRemotePlayerState playerState)
+        {
+            Debug.WriteLine("Player state changed");
+            Debug.WriteLine("Track name: " + playerState.Track.Name);
+
+            UpdatePlayerState(playerState);
+        }
+    }
+}
