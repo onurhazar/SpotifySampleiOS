@@ -108,9 +108,16 @@ namespace SpotifySampleiOS
 
         private void HandleDisconnectButton(object sender, EventArgs e)
         {
-            if (AppRemote.Connected)
+            try
             {
-                AppRemote.Disconnect();
+                if (AppRemote.Connected)
+                {
+                    AppRemote.Disconnect();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Failed to disconnect app remote. Error: " + ex.Message);
             }
         }
 
@@ -156,7 +163,14 @@ namespace SpotifySampleiOS
 
         private void FetchArtwork(ISPTAppRemoteTrack track)
         {
-            AppRemote.ImageAPI.FetchImageForItem(track, CoreGraphics.CGSize.Empty, HandleFetchArtworkCallback);
+            try
+            {
+                AppRemote.ImageAPI.FetchImageForItem(track, CoreGraphics.CGSize.Empty, HandleFetchArtworkCallback);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Failed to fetch image for item. Error: " + ex.Message);
+            }
         }
 
         void HandleFetchArtworkCallback(NSObject image, NSError error)
@@ -177,7 +191,14 @@ namespace SpotifySampleiOS
 
         private void FetchPlayerState()
         {
-            AppRemote.PlayerAPI.GetPlayerState(HandleGetPlayerStateCallback);
+            try
+            {
+                AppRemote.PlayerAPI.GetPlayerState(HandleGetPlayerStateCallback);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Failed to get player state. Error: " + ex.Message);
+            }
         }
 
         void HandleGetPlayerStateCallback(ISPTAppRemotePlayerState playerState, NSError error)
@@ -188,8 +209,6 @@ namespace SpotifySampleiOS
             }
             else if (playerState != null)
             {
-                //var state = Runtime.GetNSObject<SPTAppRemotePlayerState>(playerState.Handle);
-                //var state = playerState as ISPTAppRemotePlayerState;
                 if (playerState != null)
                 {
                     UpdatePlayerState(playerState);
@@ -243,6 +262,7 @@ namespace SpotifySampleiOS
             }
         }
 
+        [Export("appRemote:didFailConnectionAttemptWithError:")]
         public void DidFailConnectionAttemptWithError(SPTAppRemote appRemote, NSError error)
         {
             Debug.WriteLine("Failed");
@@ -250,6 +270,7 @@ namespace SpotifySampleiOS
             lastPlayerState = null;
         }
 
+        [Export("appRemote:didDisconnectWithError:")]
         public void DidDisconnectWithError(SPTAppRemote appRemote, NSError error)
         {
             Debug.WriteLine("Disconnected");

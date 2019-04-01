@@ -1,4 +1,6 @@
-﻿using Foundation;
+﻿using System;
+using System.Diagnostics;
+using Foundation;
 using UIKit;
 
 namespace SpotifySampleiOS
@@ -31,9 +33,16 @@ namespace SpotifySampleiOS
             // or when the user quits the application and it begins the transition to the background state.
             // Games should use this method to pause the game.
 
-            if (Session.AppRemote != null && Session.AppRemote.Connected)
+            try
             {
-                Session.AppRemote.Disconnect();
+                if (Session.AppRemote != null && Session.AppRemote.Connected)
+                {
+                    Session.AppRemote.Disconnect();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Failed to disconnect app remote. Error: " + ex.Message);
             }
         }
 
