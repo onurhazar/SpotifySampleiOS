@@ -3,6 +3,7 @@ using UIKit;
 using SpotifyBindingiOS;
 using Foundation;
 using System.Diagnostics;
+using ObjCRuntime;
 
 namespace SpotifySampleiOS
 {
@@ -62,7 +63,7 @@ namespace SpotifySampleiOS
             }
         }
 
-        SPTAppRemotePlayerState lastPlayerState;
+        ISPTAppRemotePlayerState lastPlayerState;
 
         protected ViewController(IntPtr handle) : base(handle)
         {
@@ -133,9 +134,9 @@ namespace SpotifySampleiOS
             }
         }
 
-        private void UpdatePlayerState(SPTAppRemotePlayerState playerState)
+        private void UpdatePlayerState(ISPTAppRemotePlayerState playerState)
         {
-            if (lastPlayerState.Track.URI != playerState.Track.URI)
+            if (lastPlayerState == null || lastPlayerState.Track.URI != playerState.Track.URI)
             {
                 FetchArtwork(playerState.Track);
             }
@@ -153,7 +154,7 @@ namespace SpotifySampleiOS
             }
         }
 
-        private void FetchArtwork(SPTAppRemoteTrack track)
+        private void FetchArtwork(ISPTAppRemoteTrack track)
         {
             AppRemote.ImageAPI.FetchImageForItem(track, CoreGraphics.CGSize.Empty, HandleFetchArtworkCallback);
         }
@@ -187,7 +188,8 @@ namespace SpotifySampleiOS
             }
             else if (playerState != null)
             {
-                var state = playerState as SPTAppRemotePlayerState;
+                //var state = Runtime.GetNSObject<SPTAppRemotePlayerState>(playerState.Handle);
+                var state = playerState as ISPTAppRemotePlayerState;
                 if (state != null)
                 {
                     UpdatePlayerState(state);
@@ -226,8 +228,10 @@ namespace SpotifySampleiOS
         {
             Debug.WriteLine("Connected");
             UpdateViewBasedOnConnected();
-            AppRemote.PlayerAPI.Delegate = this;
-            AppRemote.PlayerAPI.SubscribeToPlayerState(HandleSubscribeToPlayerStateCallback);
+            var playerAPI = appRemote.PlayerAPI;
+            //var playerapi = Runtime.GetNSObject<SPTAppRemotePlayerAPI>(playerAPI.Handle);
+            playerAPI.SetWeakDelegate(this);
+            playerAPI.SubscribeToPlayerState(HandleSubscribeToPlayerStateCallback);
             FetchPlayerState();
         }
 
@@ -257,7 +261,7 @@ namespace SpotifySampleiOS
 
         #region ISPTAppRemotePlayerAPIDelegate Methods
 
-        public void PlayerStateDidChange(SPTAppRemotePlayerState playerState)
+        public void PlayerStateDidChange(ISPTAppRemotePlayerState playerState)
         {
             Debug.WriteLine("Player state changed");
             Debug.WriteLine("Track name: " + playerState.Track.Name);
