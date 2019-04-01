@@ -180,7 +180,7 @@ namespace SpotifySampleiOS
             AppRemote.PlayerAPI.GetPlayerState(HandleGetPlayerStateCallback);
         }
 
-        void HandleGetPlayerStateCallback(NSObject playerState, NSError error)
+        void HandleGetPlayerStateCallback(ISPTAppRemotePlayerState playerState, NSError error)
         {
             if (error != null)
             {
@@ -189,10 +189,10 @@ namespace SpotifySampleiOS
             else if (playerState != null)
             {
                 //var state = Runtime.GetNSObject<SPTAppRemotePlayerState>(playerState.Handle);
-                var state = playerState as ISPTAppRemotePlayerState;
-                if (state != null)
+                //var state = playerState as ISPTAppRemotePlayerState;
+                if (playerState != null)
                 {
-                    UpdatePlayerState(state);
+                    UpdatePlayerState(playerState);
                 }
             }
         }
