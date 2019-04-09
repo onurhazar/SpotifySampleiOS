@@ -16,6 +16,9 @@ namespace SpotifySampleiOS
 		UIKit.UIImageView albumImageView { get; set; }
 
 		[Outlet]
+		UIKit.UIButton changeVolumeButton { get; set; }
+
+		[Outlet]
 		UIKit.UIButton connectButton { get; set; }
 
 		[Outlet]
@@ -26,6 +29,9 @@ namespace SpotifySampleiOS
 
 		[Outlet]
 		UIKit.UILabel songTitleLabel { get; set; }
+
+		[Outlet]
+		UIKit.UITextField volumeTextField { get; set; }
 		
 		void ReleaseDesignerOutlets ()
 		{
@@ -52,6 +58,16 @@ namespace SpotifySampleiOS
 			if (songTitleLabel != null) {
 				songTitleLabel.Dispose ();
 				songTitleLabel = null;
+			}
+
+			if (volumeTextField != null) {
+				volumeTextField.Dispose ();
+				volumeTextField = null;
+			}
+
+			if (changeVolumeButton != null) {
+				changeVolumeButton.Dispose ();
+				changeVolumeButton = null;
 			}
 		}
 	}

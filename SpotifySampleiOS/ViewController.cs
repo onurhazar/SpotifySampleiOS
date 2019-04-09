@@ -4,6 +4,9 @@ using SpotifyBindingiOS;
 using Foundation;
 using System.Diagnostics;
 using ObjCRuntime;
+using RestSharp;
+using RestSharp.Authenticators;
+using System.Net;
 
 namespace SpotifySampleiOS
 {
@@ -77,10 +80,52 @@ namespace SpotifySampleiOS
             disconnectButton.TouchUpInside += HandleDisconnectButton;
             playButton.TouchUpInside += HandlePlayButton;
 
+            changeVolumeButton.TouchUpInside += HandleChangeVolumeButton;
+
             UpdateViewBasedOnConnected();
         }
 
         //Actions
+
+        private void HandleChangeVolumeButton(object sender, EventArgs e)
+        {
+            try
+            {
+                var res = int.TryParse(volumeTextField.Text, out int newVol);
+                if(res)
+                    ChangeVolume(newVol);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Failed to change volume. Error: " + ex.Message);
+            }
+        }
+
+        void ChangeVolume(int volume)
+        {
+            var client = new RestClient("https://api.spotify.com/v1/me/player/volume");
+
+            var request = new RestRequest(Method.PUT);
+            request.AddQueryParameter("volume_percent", "1");
+            request.AddHeader("Accept", "application/json");
+            request.AddHeader("Content-Type", "application/json");
+
+            var bearerToken = "BQCbNcxTnTCrs-h7snfVE4Xl0NHNWc9dPlkXmvQPy2x9ReUvqDYj1wqCmOMIWiYYv-U2UF2wGfOuAFb5hQ_luBslnK8pWlqeOmxmJn4UtmQxdW9mlm8Lz4H-o9GhfdvZjI5ovgPMKbCNrni9IWjr5agvS0OKhwLY_2L2M4RRe2ePn73vCgWXQR1BTAuxWWs0dhFRjgKCaiToVVmixbrbfMtTzi5MOHzgKhS25QHOf6x0PHMtiEOLHeJZUDaca7bxBm2plS4zMm8WXX38rA";
+            request.AddHeader("Authorization", string.Format("Bearer {0}", bearerToken));
+
+            //var client = new RestClient("https://jsonplaceholder.typicode.com/todos/1");
+            //var request = new RestRequest(Method.GET);
+            //request.AddHeader("Accept", "application/json");
+            //request.AddHeader("Content-Type", "application/json");
+
+            //System.Net.ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+            var response = client.Execute(request);
+
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                var content = response.Content;
+            }
+        }
 
         private void HandlePlayButton(object sender, EventArgs e)
         {
