@@ -86,11 +86,11 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
     <Reference Include="Xamarin.iOS" />
-    <Reference Include="SpotifyBindingiOS">
-      <HintPath>..\..\..\..\Desktop\SpotifyBindingiOS.dll</HintPath>
-    </Reference>
     <Reference Include="RestSharp">
       <HintPath>..\packages\RestSharp.106.6.9\lib\netstandard2.0\RestSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="SpotifyBindingiOS">
+      <HintPath>..\SpotifyBindingiOS.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
